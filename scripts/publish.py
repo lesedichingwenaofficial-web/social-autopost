@@ -9,6 +9,7 @@ A post lives in posts/<id>/post.json:
       "publish_at": "2026-10-20T18:00:00+02:00",
       "caption": "...",
       "media": ["01.jpg", "02.jpg"],           # 1 file = single post, 2-10 = carousel, .mp4 = reel/video
+      "location_id": "108424279189115",        # optional: Facebook place Page ID (New York, NY)
       "status": "scheduled"                    # scheduled -> posted | failed
     }
 
@@ -82,7 +83,7 @@ def wait_until_ready(container_id, token, timeout=600):
         time.sleep(10)
 
 
-def create_item(ig_id, token, url, carousel_item=False, caption=None):
+def create_item(ig_id, token, url, carousel_item=False, caption=None, location_id=None):
     params = {"access_token": token}
     if Path(url).suffix.lower() in VIDEO_EXT:
         params["video_url"] = url
@@ -93,6 +94,8 @@ def create_item(ig_id, token, url, carousel_item=False, caption=None):
         params["is_carousel_item"] = "true"
     if caption:
         params["caption"] = caption
+    if location_id:
+        params["location_id"] = location_id
     return api("POST", f"{ig_id}/media", **params)["id"]
 
 
@@ -104,6 +107,7 @@ def publish(post, post_dir, secrets, base_url):
     rel = post_dir.relative_to(ROOT).as_posix()
     urls = [f"{base_url}/{rel}/{urllib.parse.quote(m)}" for m in media]
     caption = post.get("caption", "")
+    location = {"location_id": post["location_id"]} if post.get("location_id") else {}
 
     if DRY_RUN:
         print(f"  [dry run] would publish {len(urls)} file(s) as @{post['account']}:")
@@ -114,7 +118,7 @@ def publish(post, post_dir, secrets, base_url):
     ig_id = api("GET", "me", fields="user_id,username", access_token=token)["user_id"]
 
     if len(urls) == 1:
-        container = create_item(ig_id, token, urls[0], caption=caption)
+        container = create_item(ig_id, token, urls[0], caption=caption, **location)
     else:
         children = []
         for u in urls:
@@ -123,7 +127,7 @@ def publish(post, post_dir, secrets, base_url):
             children.append(child)
         container = api("POST", f"{ig_id}/media", media_type="CAROUSEL",
                         children=",".join(children), caption=caption,
-                        access_token=token)["id"]
+                        access_token=token, **location)["id"]
     wait_until_ready(container, token)
     media_id = api("POST", f"{ig_id}/media_publish", creation_id=container,
                    access_token=token)["id"]

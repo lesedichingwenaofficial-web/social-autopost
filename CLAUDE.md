@@ -33,4 +33,7 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
   4:5 to 1.91:1, caption <= 2200 chars and <= 30 hashtags, 100 posts/day/account.
 - The repo is public (Instagram must fetch images by URL), so scheduled
   captions/images are visible before they post. Don't put anything private here.
+- Location: `--location-id <Facebook place Page ID>` (not an Instagram location id; no country-level
+  US page exists). Known: New York, NY = 108424279189115. Verify others at facebook.com/<id>.
+- Music: the API cannot add Instagram library music to posts.
 - Test without posting: `DRY_RUN=1 python3 scripts/publish.py`

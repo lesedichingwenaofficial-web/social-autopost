@@ -45,6 +45,7 @@ def main():
     cap.add_argument("--caption")
     cap.add_argument("--caption-file")
     p.add_argument("--name", help="folder name hint")
+    p.add_argument("--location-id", help="Facebook place Page ID, e.g. 108424279189115 = New York, NY")
     p.add_argument("media", nargs="+")
     a = p.parse_args()
 
@@ -79,6 +80,7 @@ def main():
         "publish_at": when.isoformat(timespec="minutes"),
         "caption": caption,
         "media": names,
+        **({"location_id": a.location_id} if a.location_id else {}),
         "status": "scheduled",
     }
     (folder / "post.json").write_text(json.dumps(post, indent=2, ensure_ascii=False) + "\n")
