@@ -1,0 +1,14 @@
+name: Check accounts
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Instagram tokens
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: python3 scripts/check_accounts.py
