@@ -13,3 +13,9 @@ jobs:
           # One line per Instagram account (secret IG_TOKEN_<ACCOUNT>)
           IG_TOKEN_FORMULASIMPLE: ${{ secrets.IG_TOKEN_FORMULASIMPLE }}
         run: python3 scripts/check_accounts.py
+      - name: Check GH_PAT can manage secrets (used by the weekly token refresh)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "GH_PAT secret missing"; exit 1; fi
+          gh secret list --repo "$GITHUB_REPOSITORY" > /dev/null && echo "GH_PAT: OK (can manage secrets)"
