@@ -23,6 +23,13 @@ the official Instagram API. The laptop does not need to be on.
 To cancel or reschedule: edit or delete the post folder (or set `"status": "cancelled"`) and push before its time.
 Check results: `status` / `result` / `last_error` in each `post.json` (the workflow commits them back) — `git pull` first.
 
+## Accounts (`--account` value -> Instagram)
+- `formulasimple` -> @formulasimple.co (style: templates/slide.html)
+- `cheekyfoundlamb` -> @cheekyfoundlamb (style: not yet defined - ask the user)
+- `parentsgodlywarehouse` -> @parentsgodlywarehouse (style: not yet defined - ask the user)
+- `parentsdispatchedinfo` -> @parentsdispatchedinfo (style: not yet defined - ask the user)
+Each account has its own style; never reuse Formula Simple's look for the others.
+
 ## Rules
 - Accounts: secret `IG_TOKEN_<ACCOUNT>` per account (e.g. `IG_TOKEN_FORMULASIMPLE`).
   Never ask for, print, or handle token values; the user sets secrets themselves.
