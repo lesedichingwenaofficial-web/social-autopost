@@ -22,7 +22,8 @@ jobs:
       - name: Publish
         id: publish
         env:
-          SECRETS_JSON: ${{ toJSON(secrets) }}
+          # One line per Instagram account (secret IG_TOKEN_<ACCOUNT>)
+          IG_TOKEN_FORMULASIMPLE: ${{ secrets.IG_TOKEN_FORMULASIMPLE }}
           MEDIA_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
         run: python3 scripts/publish.py
 

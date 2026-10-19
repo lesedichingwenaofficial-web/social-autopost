@@ -6,7 +6,7 @@ import sys
 import urllib.error
 import urllib.request
 
-secrets = json.loads(os.environ.get("SECRETS_JSON") or "{}")
+secrets = {k: v for k, v in os.environ.items() if (k.startswith("IG_TOKEN_") or k == "GH_PAT") and v}
 names = sorted(k for k in secrets if k.startswith("IG_TOKEN_"))
 if not names:
     sys.exit("no IG_TOKEN_* secrets found")

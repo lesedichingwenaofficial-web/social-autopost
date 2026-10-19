@@ -26,6 +26,9 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
 ## Rules
 - Accounts: secret `IG_TOKEN_<ACCOUNT>` per account (e.g. `IG_TOKEN_FORMULASIMPLE`).
   Never ask for, print, or handle token values; the user sets secrets themselves.
+  New account: after the user sets its secret, add an `IG_TOKEN_<ACCOUNT>: ${{ secrets.IG_TOKEN_<ACCOUNT> }}`
+  line to the env block in publish.yml, refresh-tokens.yml and check-accounts.yml, push, then run
+  `gh workflow run check-accounts.yml`. Never pass `toJSON(secrets)` - GitHub flags it as malicious.
 - Limits: 1-10 media per post, JPEG images (new_post.py converts), aspect
   4:5 to 1.91:1, caption <= 2200 chars and <= 30 hashtags, 100 posts/day/account.
 - The repo is public (Instagram must fetch images by URL), so scheduled

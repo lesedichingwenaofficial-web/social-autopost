@@ -10,5 +10,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check Instagram tokens
         env:
-          SECRETS_JSON: ${{ toJSON(secrets) }}
+          # One line per Instagram account (secret IG_TOKEN_<ACCOUNT>)
+          IG_TOKEN_FORMULASIMPLE: ${{ secrets.IG_TOKEN_FORMULASIMPLE }}
         run: python3 scripts/check_accounts.py

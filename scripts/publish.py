@@ -13,7 +13,7 @@ A post lives in posts/<id>/post.json:
     }
 
 Env:
-    SECRETS_JSON   all repo secrets as JSON (toJSON(secrets) in the workflow)
+    IG_TOKEN_<ACCOUNT>  one env var per account, mapped from repo secrets in the workflow
     MEDIA_BASE_URL public base URL that serves the repo files at this commit
     DRY_RUN=1      print what would happen, call nothing
 """
@@ -135,7 +135,7 @@ def publish(post, post_dir, secrets, base_url):
 
 
 def main():
-    secrets = json.loads(os.environ.get("SECRETS_JSON") or "{}")
+    secrets = {k: v for k, v in os.environ.items() if (k.startswith("IG_TOKEN_") or k == "GH_PAT") and v}
     base_url = os.environ.get("MEDIA_BASE_URL", "").rstrip("/")
     if not base_url and not DRY_RUN:
         sys.exit("MEDIA_BASE_URL is not set")

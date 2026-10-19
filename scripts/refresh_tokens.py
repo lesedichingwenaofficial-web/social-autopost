@@ -14,7 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-secrets = json.loads(os.environ.get("SECRETS_JSON") or "{}")
+secrets = {k: v for k, v in os.environ.items() if (k.startswith("IG_TOKEN_") or k == "GH_PAT") and v}
 repo = os.environ["GITHUB_REPOSITORY"]
 pat = secrets.get("GH_PAT")
 failures = 0
