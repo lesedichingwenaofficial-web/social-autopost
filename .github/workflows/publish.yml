@@ -1,0 +1,38 @@
+name: Publish due posts
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # GitHub may run this a few minutes late at busy times
+  workflow_dispatch:          # "Run workflow" button to post due items right now
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish
+        id: publish
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          MEDIA_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
+        run: python3 scripts/publish.py
+
+      - name: Save post statuses
+        if: always()
+        run: |
+          git config user.name "autopost-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add posts
+          git diff --cached --quiet && exit 0
+          git commit -m "Update post statuses"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
+          exit 1

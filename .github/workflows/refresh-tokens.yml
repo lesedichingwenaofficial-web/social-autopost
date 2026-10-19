@@ -1,0 +1,31 @@
+name: Refresh Instagram tokens
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refresh tokens
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: python3 scripts/refresh_tokens.py
+
+      # GitHub pauses scheduled workflows in repos with no commits for 60 days.
+      # A weekly heartbeat commit keeps the publisher alive during quiet periods.
+      - name: Heartbeat
+        if: always()
+        run: |
+          date -u +%FT%TZ > .github/heartbeat
+          git config user.name "autopost-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/heartbeat
+          git commit -qm "Heartbeat" && git pull --rebase -q && git push -q

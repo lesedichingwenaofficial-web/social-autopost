@@ -1,0 +1,42 @@
+<!doctype html>
+<!-- Formula Simple slide, 1080x1350 (4:5). Copy, edit the content block, render with scripts/render.sh -->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f0ebe2; --ink: #121212; --accent: #ff5106; --grid: rgba(0,0,0,.05); }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1080px; height: 1350px; overflow: hidden; }
+  body {
+    background: var(--bg);
+    background-image: linear-gradient(var(--grid) 2px, transparent 2px),
+                      linear-gradient(90deg, var(--grid) 2px, transparent 2px);
+    background-size: 180px 180px; background-position: -90px -60px;
+    color: var(--ink); font-family: "Space Grotesk", sans-serif;
+    position: relative; padding: 56px 70px;
+  }
+  .top { display: flex; justify-content: space-between; font: 700 24px "Space Mono", monospace;
+         letter-spacing: .02em; padding-bottom: 14px; border-bottom: 3px solid var(--ink); }
+  .kicker { font: 700 44px/1.05 "Space Mono", monospace; margin-top: 44px; }
+  .big { font-weight: 700; font-size: 104px; line-height: .98; letter-spacing: -.03em; margin-top: 10px; }
+  .num { color: var(--accent); font-size: 190px; letter-spacing: -.05em; line-height: .9; }
+  .body { font-size: 40px; line-height: 1.3; margin-top: 36px; max-width: 900px; }
+  .cta { position: absolute; left: 70px; bottom: 106px; background: var(--ink); color: var(--bg);
+         font: 700 28px "Space Mono", monospace; padding: 10px 20px; }
+  .dot { position: absolute; right: -180px; bottom: -210px; width: 500px; height: 500px;
+         border-radius: 50%; background: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="top"><span>VIRAL BREAKDOWN — 34.1M VIEWS</span><span>02/07</span></div>
+
+  <div class="kicker">The cut happens at</div>
+  <div class="big"><span class="num">0:03</span></div>
+  <div class="body">Edit this text. Keep slides to one idea each: a label, one big number or phrase, and a short line of explanation.</div>
+
+  <div class="cta">SWIPE →</div>
+  <div class="dot"></div>
+</body>
+</html>
