@@ -64,6 +64,7 @@ Claude shows you the slides and caption first and schedules only after you appro
 ## Good to know
 - Timing: GitHub's scheduler can run late at busy times, so a post usually goes out within
   about 15–30 minutes of its time.
-- This repo is **public**, because Instagram has to download the images from a public link.
-  Upcoming posts are visible here before they go live. Tokens stay private in GitHub secrets.
+- This repo is **public** (Instagram downloads images from a public link), but scheduled posts are
+  **locked**: only the account and time are visible until about a minute before posting.
+  One-time setup: `scripts/setup_lock_key.sh`. Tokens stay private in GitHub secrets.
 - Limits: up to 10 images/videos per post, 100 posts per day per account.

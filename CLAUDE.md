@@ -25,7 +25,14 @@ the official Instagram API. The laptop does not need to be on.
    cloud session), the scheduled run picks it up within ~5-15 min.
 7. After it posts, `git pull` and report the Instagram link from `result` in post.json.
 
-To cancel or reschedule: edit or delete the post folder (or set `"status": "cancelled"`) and push before its time.
+Posts are **locked** (encrypted) by default: the public repo only shows account + time until the
+publisher reveals the images/caption ~1 minute before posting (scripts/postcrypt.py). Sessions can
+lock but cannot unlock, so:
+- Reschedule: edit `publish_at` in post.json, push to main.
+- Cancel: delete the post folder (or set `"status": "cancelled"`), push to main.
+- Change caption/images: delete the post and create it again (keep drafts until it has posted).
+Runs check every 5 min and wait for anything due in the next 6 min, so posts go out on the minute
+when GitHub runs on time.
 Check results: `status` / `result` / `last_error` in each `post.json` (the workflow commits them back) — `git pull` first.
 
 ## Accounts (`--account` value -> Instagram)
@@ -48,7 +55,7 @@ Each account has its own style; never reuse Formula Simple's look for the others
 - Limits: 1-10 media per post, JPEG images (new_post.py converts), aspect
   4:5 to 1.91:1, caption <= 2200 chars and <= 30 hashtags, 100 posts/day/account.
 - The repo is public (Instagram must fetch images by URL), so scheduled
-  captions/images are visible before they post. Don't put anything private here.
+  account names and times are visible; locked content is not. Don't use --no-lock unless asked.
 - Location: `--location-id <Facebook place Page ID>` (not an Instagram location id; no country-level
   US page exists). Known: New York, NY = 108424279189115. Verify others at facebook.com/<id>.
 - Music: the API cannot add Instagram library music to posts.

@@ -12,26 +12,36 @@ A post lives in posts/<id>/post.json:
       "location_id": "108424279189115",        # optional: Facebook place Page ID (New York, NY)
       "status": "scheduled"                    # scheduled -> posted | failed
     }
+Locked posts (the default, see postcrypt.py) hold only account/publish_at/status in
+post.json; caption and media are encrypted until this script reveals them - pushes the
+decrypted files a minute or two before publishing so Instagram can download them.
+Posts due within LOOKAHEAD are waited for, so they go out on the minute.
 
 Env:
     IG_TOKEN_<ACCOUNT>  one env var per account, mapped from repo secrets in the workflow
     MEDIA_BASE_URL public base URL that serves the repo files at this commit
+    POST_PRIVATE_KEY    private key that unlocks locked posts
+    GITHUB_REPOSITORY   owner/repo, for raw URLs of freshly revealed media
     DRY_RUN=1      print what would happen, call nothing
 """
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+import postcrypt
 
 GRAPH = "https://graph.instagram.com/v23.0"
 ROOT = Path(__file__).resolve().parent.parent
 POSTS = ROOT / "posts"
 MAX_ATTEMPTS = 3
+LOOKAHEAD = timedelta(minutes=6)   # a bit more than the 5-minute schedule
 VIDEO_EXT = {".mp4", ".mov"}
 
 DRY_RUN = os.environ.get("DRY_RUN") == "1"
@@ -138,6 +148,41 @@ def publish(post, post_dir, secrets, base_url):
     return link or media_id
 
 
+def git(*args):
+    return subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def reveal(post_file, post):
+    """Unlock a locked post and push the plain files; returns the raw base URL for that commit."""
+    key = os.environ.get("POST_PRIVATE_KEY")
+    if not key:
+        raise ApiError("post is locked but the POST_PRIVATE_KEY secret is missing")
+    full = postcrypt.unlock(post_file.parent, post, key)
+    post_file.write_text(json.dumps(full, indent=2, ensure_ascii=False) + "\n")
+    git("config", "user.name", "autopost-bot")
+    git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com")
+    git("add", "-A", str(post_file.parent))
+    git("commit", "-m", f"Reveal {post_file.parent.name} for publishing")
+    for attempt in range(3):
+        try:
+            git("pull", "--rebase", "-q")
+            git("push", "-q")
+            break
+        except subprocess.CalledProcessError:
+            if attempt == 2:
+                raise
+            time.sleep(5)
+    base = f"https://raw.githubusercontent.com/{os.environ['GITHUB_REPOSITORY']}/{git('rev-parse', 'HEAD')}"
+    first = f"{base}/{post_file.parent.relative_to(ROOT).as_posix()}/{urllib.parse.quote(full['media'][0])}"
+    for _ in range(12):  # wait until GitHub serves the new commit
+        try:
+            urllib.request.urlopen(urllib.request.Request(first, method="HEAD"), timeout=20)
+            break
+        except urllib.error.URLError:
+            time.sleep(5)
+    return full, base
+
+
 def main():
     secrets = {k: v for k, v in os.environ.items() if (k.startswith("IG_TOKEN_") or k == "GH_PAT") and v}
     base_url = os.environ.get("MEDIA_BASE_URL", "").rstrip("/")
@@ -146,22 +191,35 @@ def main():
     now = datetime.now(timezone.utc)
     failures = 0
 
+    due = []
     for post_file in sorted(POSTS.glob("*/post.json")):
         post = json.loads(post_file.read_text())
         if post.get("status") != "scheduled":
             continue
-        due = datetime.fromisoformat(post["publish_at"])
-        if due.tzinfo is None:
+        when = datetime.fromisoformat(post["publish_at"])
+        if when.tzinfo is None:
             print(f"{post_file.parent.name}: publish_at has no timezone, skipping")
             failures += 1
             continue
-        if due > now:
-            continue
+        if when <= now + LOOKAHEAD:
+            due.append((when, post_file, post))
 
+    for when, post_file, post in sorted(due, key=lambda d: d[0]):
+        wait = (when - datetime.now(timezone.utc)).total_seconds()
+        if wait > 0 and not DRY_RUN:
+            print(f"{post_file.parent.name}: due {post['publish_at']}, waiting {wait:.0f}s")
+            time.sleep(wait)
         print(f"{post_file.parent.name}: due {post['publish_at']}, publishing...")
         try:
-            result = publish(post, post_file.parent, secrets, base_url)
+            post_base = base_url
+            if post.get("locked"):
+                if DRY_RUN:
+                    print("  [dry run] locked - would unlock, reveal and publish")
+                    continue
+                post, post_base = reveal(post_file, post)
+            result = publish(post, post_file.parent, secrets, post_base)
         except Exception as e:
+            post = json.loads(post_file.read_text())  # on-disk state (may be revealed already)
             post["attempts"] = post.get("attempts", 0) + 1
             post["last_error"] = str(e)
             if post["attempts"] >= MAX_ATTEMPTS:

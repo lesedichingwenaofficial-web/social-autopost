@@ -27,6 +27,7 @@ jobs:
           IG_TOKEN_CHEEKYFOUNDLAMB: ${{ secrets.IG_TOKEN_CHEEKYFOUNDLAMB }}
           IG_TOKEN_PARENTSGODLYWAREHOUSE: ${{ secrets.IG_TOKEN_PARENTSGODLYWAREHOUSE }}
           IG_TOKEN_PARENTSDISPATCHEDINFO: ${{ secrets.IG_TOKEN_PARENTSDISPATCHEDINFO }}
+          POST_PRIVATE_KEY: ${{ secrets.POST_PRIVATE_KEY }}
           MEDIA_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
         run: python3 scripts/publish.py
 

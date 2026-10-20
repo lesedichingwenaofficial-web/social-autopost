@@ -6,7 +6,8 @@
 
 Images are converted to JPEG (Instagram's API only accepts JPEG) and checked
 against Instagram's limits. Times without a timezone are South African time (SAST).
-Needs Pillow (pip install pillow).
+Content is locked (encrypted) by default until the publisher reveals it at posting
+time - see postcrypt.py. Needs Pillow (pip install pillow) and the openssl CLI.
 """
 import argparse
 import json
@@ -18,6 +19,8 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from PIL import Image
+
+import postcrypt
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TZ = ZoneInfo("Africa/Johannesburg")  # user's local time, even on UTC cloud machines
@@ -48,9 +51,13 @@ def main():
     cap.add_argument("--caption-file")
     p.add_argument("--name", help="folder name hint")
     p.add_argument("--location-id", help="Facebook place Page ID, e.g. 108424279189115 = New York, NY")
+    p.add_argument("--no-lock", action="store_true",
+                   help="leave images/caption readable in the public repo until posting")
     p.add_argument("media", nargs="+")
     a = p.parse_args()
 
+    if not a.no_lock and not postcrypt.PUBLIC_KEY.exists():
+        sys.exit("keys/public.pem missing - run scripts/setup_lock_key.sh once (or pass --no-lock)")
     when = datetime.fromisoformat(a.at.replace(" ", "T"))
     if when.tzinfo is None:
         when = when.replace(tzinfo=DEFAULT_TZ)
@@ -85,6 +92,8 @@ def main():
         **({"location_id": a.location_id} if a.location_id else {}),
         "status": "scheduled",
     }
+    if not a.no_lock:
+        post = postcrypt.lock(folder, post)
     (folder / "post.json").write_text(json.dumps(post, indent=2, ensure_ascii=False) + "\n")
     print(folder.relative_to(ROOT))
 
