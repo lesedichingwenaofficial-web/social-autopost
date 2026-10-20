@@ -5,7 +5,7 @@
         --at "2026-10-20 18:00" --caption-file caption.txt slide1.png slide2.png
 
 Images are converted to JPEG (Instagram's API only accepts JPEG) and checked
-against Instagram's limits. Times without a timezone use this computer's zone.
+against Instagram's limits. Times without a timezone are South African time (SAST).
 Needs Pillow (pip install pillow).
 """
 import argparse
@@ -14,11 +14,13 @@ import re
 import shutil
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_TZ = ZoneInfo("Africa/Johannesburg")  # user's local time, even on UTC cloud machines
 VIDEO_EXT = {".mp4", ".mov"}
 
 
@@ -51,7 +53,7 @@ def main():
 
     when = datetime.fromisoformat(a.at.replace(" ", "T"))
     if when.tzinfo is None:
-        when = when.astimezone()  # attach this computer's timezone
+        when = when.replace(tzinfo=DEFAULT_TZ)
     caption = a.caption if a.caption is not None else Path(a.caption_file).read_text().strip()
 
     hashtags = len(re.findall(r"#\w+", caption))
