@@ -93,8 +93,8 @@ def wait_until_ready(container_id, token, timeout=600):
         time.sleep(10)
 
 
-def create_item(ig_id, token, url, carousel_item=False, caption=None, location_id=None):
-    params = {"access_token": token}
+def create_item(ig_id, token, url, carousel_item=False, caption=None, location_id=None, **reel):
+    params = {"access_token": token, **reel}
     if Path(url).suffix.lower() in VIDEO_EXT:
         params["video_url"] = url
         params["media_type"] = "VIDEO" if carousel_item else "REELS"
@@ -118,6 +118,13 @@ def publish(post, post_dir, secrets, base_url):
     urls = [f"{base_url}/{rel}/{urllib.parse.quote(m)}" for m in media]
     caption = post.get("caption", "")
     location = {"location_id": post["location_id"]} if post.get("location_id") else {}
+    reel = {}
+    if post.get("cover"):
+        reel["cover_url"] = f"{base_url}/{rel}/{urllib.parse.quote(post['cover'])}"
+    if post.get("thumb_offset_ms") is not None:
+        reel["thumb_offset"] = str(post["thumb_offset_ms"])
+    if post.get("audio_name"):
+        reel["audio_name"] = post["audio_name"]
 
     if DRY_RUN:
         print(f"  [dry run] would publish {len(urls)} file(s) as @{post['account']}:")
@@ -128,7 +135,7 @@ def publish(post, post_dir, secrets, base_url):
     ig_id = api("GET", "me", fields="user_id,username", access_token=token)["user_id"]
 
     if len(urls) == 1:
-        container = create_item(ig_id, token, urls[0], caption=caption, **location)
+        container = create_item(ig_id, token, urls[0], caption=caption, **location, **reel)
     else:
         children = []
         for u in urls:

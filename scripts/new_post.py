@@ -4,6 +4,11 @@
     python3 scripts/new_post.py --account formulasimple \
         --at "2026-10-20 18:00" --caption-file caption.txt slide1.png slide2.png
 
+Videos: --cover sets a Reel's cover image (or --thumb-offset picks a frame), --audio-name
+renames its audio. Music: --music bakes your own audio file into a video; with --reel, image
+slides become a 9:16 slideshow Reel with that music (Instagram's music library isn't
+available through the API).
+
 Images are converted to JPEG (Instagram's API only accepts JPEG) and checked
 against Instagram's limits. Times without a timezone are South African time (SAST).
 Content is locked (encrypted) by default until the publisher reveals it at posting
@@ -20,6 +25,7 @@ from pathlib import Path
 
 from PIL import Image
 
+import media as mediatools
 import postcrypt
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -53,6 +59,15 @@ def main():
     p.add_argument("--location-id", help="Facebook place Page ID, e.g. 108424279189115 = New York, NY")
     p.add_argument("--no-lock", action="store_true",
                    help="leave images/caption readable in the public repo until posting")
+    p.add_argument("--cover", help="cover image for a single-video Reel")
+    p.add_argument("--thumb-offset", type=float, help="seconds into the video to use as the cover frame")
+    p.add_argument("--audio-name", help="name shown for the Reel's audio")
+    p.add_argument("--music", help="audio file (mp3/m4a/wav) to put under the video")
+    p.add_argument("--music-volume", type=float, default=1.0, help="0-1, default 1")
+    p.add_argument("--keep-original-audio", action="store_true", help="mix music with the video's own sound")
+    p.add_argument("--reel", action="store_true", help="turn the image slides into one slideshow Reel")
+    p.add_argument("--seconds-per-slide", type=float, default=3.0)
+    p.add_argument("--pad-color", default="black", help="background around 4:5 slides in a 9:16 Reel")
     p.add_argument("media", nargs="+")
     a = p.parse_args()
 
@@ -69,20 +84,59 @@ def main():
     if not 1 <= len(a.media) <= 10:
         sys.exit("need 1-10 media files")
 
+    sources = list(map(Path, a.media))
+    videos = [s for s in sources if s.suffix.lower() in VIDEO_EXT]
+    if a.reel and videos:
+        sys.exit("--reel builds a Reel from images only")
+    if a.music and not videos and not a.reel:
+        sys.exit("music needs a video - add --reel to turn the images into a slideshow Reel")
+
     folder = ROOT / "posts" / f"{when:%Y-%m-%d-%H%M}-{a.account}-{slugify(a.name or caption[:40])}"
     if folder.exists():
         sys.exit(f"{folder} already exists")
     folder.mkdir(parents=True)
+    try:
+        build(a, folder, sources, videos, when, caption)
+    except BaseException:
+        shutil.rmtree(folder, ignore_errors=True)
+        raise
+
+
+def build(a, folder, sources, videos, when, caption):
 
     names = []
-    for i, src in enumerate(map(Path, a.media), 1):
-        if src.suffix.lower() in VIDEO_EXT:
-            name = f"{i:02d}{src.suffix.lower()}"
-            shutil.copy(src, folder / name)
-        else:
-            name = f"{i:02d}.jpg"
-            to_jpeg(src, folder / name)
-        names.append(name)
+    if a.reel:
+        mediatools.slideshow(sources, folder / "01.mp4", a.seconds_per_slide, a.music,
+                             a.music_volume, a.pad_color)
+        names.append("01.mp4")
+    else:
+        for i, src in enumerate(sources, 1):
+            if src.suffix.lower() in VIDEO_EXT:
+                name = f"{i:02d}.mp4"
+                if a.music:
+                    mediatools.add_music(src, a.music, folder / name, a.music_volume,
+                                         a.keep_original_audio)
+                else:
+                    shutil.copy(src, folder / name)
+            else:
+                name = f"{i:02d}.jpg"
+                to_jpeg(src, folder / name)
+            names.append(name)
+
+    reel_opts = {}
+    single_video = len(names) == 1 and names[0].endswith(".mp4")
+    if (a.cover or a.audio_name) and not single_video:
+        sys.exit("--cover and --audio-name only work on a single-video (Reel) post")
+    if a.cover:
+        Image.open(a.cover).convert("RGB").save(folder / "cover.jpg", "JPEG", quality=95)
+        reel_opts["cover"] = "cover.jpg"
+    if a.thumb_offset is not None:
+        reel_opts["thumb_offset_ms"] = int(a.thumb_offset * 1000)
+    if a.audio_name:
+        reel_opts["audio_name"] = a.audio_name
+    size_mb = sum(f.stat().st_size for f in folder.iterdir()) / 1e6
+    if size_mb > 90:
+        sys.exit(f"post is {size_mb:.0f} MB - GitHub rejects files over 100 MB; compress the video")
 
     post = {
         "account": a.account,
@@ -90,6 +144,7 @@ def main():
         "caption": caption,
         "media": names,
         **({"location_id": a.location_id} if a.location_id else {}),
+        **reel_opts,
         "status": "scheduled",
     }
     if not a.no_lock:

@@ -22,7 +22,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC_KEY = ROOT / "keys" / "public.pem"
-CONTENT_FIELDS = ("caption", "media", "location_id")
+CONTENT_FIELDS = ("caption", "media", "location_id", "cover", "thumb_offset_ms", "audio_name")
+
+
+def files_of(post):
+    return list(post["media"]) + ([post["cover"]] if post.get("cover") else [])
 
 
 def _openssl(*args, data=None):
@@ -39,7 +43,7 @@ def lock(folder, post):
         info = tarfile.TarInfo("content.json")
         info.size = len(blob)
         tar.addfile(info, io.BytesIO(blob))
-        for name in post["media"]:
+        for name in files_of(post):
             tar.add(folder / name, arcname=name)
     password = secrets.token_hex(32).encode()
     with tempfile.NamedTemporaryFile() as pw:
@@ -50,7 +54,7 @@ def lock(folder, post):
     (folder / "key.enc").write_bytes(_openssl(
         "pkeyutl", "-encrypt", "-pubin", "-inkey", str(PUBLIC_KEY),
         "-pkeyopt", "rsa_padding_mode:oaep", data=password))
-    for name in post["media"]:
+    for name in files_of(post):
         (folder / name).unlink()
     public = {k: v for k, v in post.items() if k not in CONTENT_FIELDS}
     public["locked"] = True
@@ -76,7 +80,7 @@ def unlock(folder, post, private_key_pem):
                              data=(folder / "content.enc").read_bytes())
     with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:gz") as tar:
         content = json.load(tar.extractfile("content.json"))
-        for name in content["media"]:
+        for name in files_of(content):
             member = tar.getmember(name)
             if "/" in name or name.startswith("."):
                 raise ValueError(f"bad media name {name!r}")

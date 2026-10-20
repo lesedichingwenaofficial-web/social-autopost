@@ -58,5 +58,11 @@ Each account has its own style; never reuse Formula Simple's look for the others
   account names and times are visible; locked content is not. Don't use --no-lock unless asked.
 - Location: `--location-id <Facebook place Page ID>` (not an Instagram location id; no country-level
   US page exists). Known: New York, NY = 108424279189115. Verify others at facebook.com/<id>.
-- Music: the API cannot add Instagram library music to posts.
+- Video: .mp4/.mov post as a Reel (single) or carousel items. Reel options: `--cover img`,
+  `--thumb-offset SECONDS`, `--audio-name "..."` (single-video posts only). Keep a post under ~90 MB.
+- Music: Instagram's music library is NOT available via the API. Instead bake an audio file the user
+  supplies (and has rights to) into the video: `--music song.mp3 [--music-volume 0.4]
+  [--keep-original-audio]`. For image slides with music use `--reel --music song.mp3
+  [--seconds-per-slide 3] [--pad-color "#f0ebe2"]` - this posts a 9:16 slideshow Reel, not a
+  swipeable carousel. Needs ffmpeg (or `pip install imageio-ffmpeg`).
 - Test without posting: `DRY_RUN=1 python3 scripts/publish.py`
