@@ -16,9 +16,14 @@ the official Instagram API. The laptop does not need to be on.
 4. Schedule:
    `python3 scripts/new_post.py --account <acct> --at "YYYY-MM-DD HH:MM" --caption-file <file> drafts/<slug>/*.png`
    (local time is Africa/Johannesburg, SAST +02:00 unless the user says otherwise)
-5. `git add posts && git commit -m "Schedule <slug>" && git push`
-6. "Post now": schedule with the current time, push, then
-   `gh workflow run publish.yml` and watch with `gh run watch`.
+5. `git add posts && git commit -m "Schedule <slug>"`, then get it onto **main** (the publisher only
+   reads main): `git pull --rebase origin main && git push origin HEAD:main`. This matters in
+   worktree or cloud/web sessions that start on their own branch - a post pushed only to a side
+   branch never publishes. Confirm with `git log origin/main -1`.
+6. "Post now": schedule with the current time, push to main, then
+   `gh workflow run publish.yml` and watch with `gh run watch`. If `gh` isn't available (e.g. a
+   cloud session), the scheduled run picks it up within ~15 min.
+7. After it posts, `git pull` and report the Instagram link from `result` in post.json.
 
 To cancel or reschedule: edit or delete the post folder (or set `"status": "cancelled"`) and push before its time.
 Check results: `status` / `result` / `last_error` in each `post.json` (the workflow commits them back) — `git pull` first.
@@ -29,6 +34,10 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
 - `parentsgodlywarehouse` -> @parentsgodlywarehouse (style: not yet defined - ask the user)
 - `parentsdispatchedinfo` -> @parentsdispatchedinfo (style: not yet defined - ask the user)
 Each account has its own style; never reuse Formula Simple's look for the others.
+
+## Setup in a fresh environment
+`pip install pillow` if `python3 -c 'import PIL'` fails. Slide rendering needs Chrome/Chromium
+(scripts/render.sh); if none is available, ask the user for finished slide images instead.
 
 ## Rules
 - Accounts: secret `IG_TOKEN_<ACCOUNT>` per account (e.g. `IG_TOKEN_FORMULASIMPLE`).
