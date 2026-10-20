@@ -2,7 +2,7 @@ name: Publish due posts
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # GitHub may run this a few minutes late at busy times
+    - cron: "4-59/5 * * * *"   # every 5 min, off the busy :00/:15 marks (GitHub can still run late)
   workflow_dispatch:          # "Run workflow" button to post due items right now
 
 concurrency:

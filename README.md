@@ -10,7 +10,7 @@ accounts, no paid tools.
 You + Claude ──► posts/<post>/  (slides + post.json with time & caption)
                      │ git push
                      ▼
-GitHub Actions (every 15 min) ──► Instagram API ──► published
+GitHub Actions (every 5 min) ──► Instagram API ──► published
                      │
                      └─► writes "posted" + link back into post.json
 ```

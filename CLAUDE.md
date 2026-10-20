@@ -1,7 +1,7 @@
 # Social autopost
 
 Free Instagram scheduler: posts live in `posts/`, a GitHub Actions workflow
-(`.github/workflows/publish.yml`, every 15 min) publishes anything due through
+(`.github/workflows/publish.yml`, every 5 min) publishes anything due through
 the official Instagram API. The laptop does not need to be on.
 
 ## Making a post (what the user asks Claude for)
@@ -22,7 +22,7 @@ the official Instagram API. The laptop does not need to be on.
    branch never publishes. Confirm with `git log origin/main -1`.
 6. "Post now": schedule with the current time, push to main, then
    `gh workflow run publish.yml` and watch with `gh run watch`. If `gh` isn't available (e.g. a
-   cloud session), the scheduled run picks it up within ~15 min.
+   cloud session), the scheduled run picks it up within ~5-15 min.
 7. After it posts, `git pull` and report the Instagram link from `result` in post.json.
 
 To cancel or reschedule: edit or delete the post folder (or set `"status": "cancelled"`) and push before its time.
