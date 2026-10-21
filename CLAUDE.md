@@ -37,7 +37,8 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
 
 ## Accounts (`--account` value -> Instagram)
 - `formulasimple` -> @formulasimple.co (style: templates/slide.html)
-- `cheekyfoundlamb` -> @cheekyfoundlamb (style: not yet defined - ask the user)
+- `cheekyfoundlamb` -> @cheekyfoundlamb (style: not yet defined - ask the user). Target audience is the
+  US: always add `--location-id 108424279189115` (New York, NY) to every post.
 - `parentsgodlywarehouse` -> @parentsgodlywarehouse (style: not yet defined - ask the user)
 - `parentsdispatchedinfo` -> @parentsdispatchedinfo (style: not yet defined - ask the user)
 Each account has its own style; never reuse Formula Simple's look for the others.
