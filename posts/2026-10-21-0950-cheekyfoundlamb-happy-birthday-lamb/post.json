@@ -6,5 +6,7 @@
   "media": [
     "01.mp4"
   ],
-  "thumb_offset_ms": 7300
+  "thumb_offset_ms": 7300,
+  "attempts": 1,
+  "last_error": "GET me: HTTP 400: API access blocked."
 }
