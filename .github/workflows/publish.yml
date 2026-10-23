@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: "7-59/15 * * * *"
   workflow_dispatch:          # "Run workflow" button to (re)start the publisher now
+    inputs:
+      minutes:
+        description: How long this run keeps checking before handing over to the next run
+        default: "320"
 
 concurrency:
   group: publish
@@ -32,7 +36,7 @@ jobs:
           IG_TOKEN_PARENTSGODLYWAREHOUSE: ${{ secrets.IG_TOKEN_PARENTSGODLYWAREHOUSE }}
           IG_TOKEN_PARENTSDISPATCHEDINFO: ${{ secrets.IG_TOKEN_PARENTSDISPATCHEDINFO }}
           POST_PRIVATE_KEY: ${{ secrets.POST_PRIVATE_KEY }}
-          LOOP_MINUTES: 320
+          LOOP_MINUTES: ${{ inputs.minutes || '320' }}
         run: |
           git config user.name "autopost-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
