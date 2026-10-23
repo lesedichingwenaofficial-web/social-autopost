@@ -1,9 +1,13 @@
 name: Publish due posts
 
+# GitHub's cron is best-effort and often skips runs for an hour or more, so instead of relying on
+# it the publisher stays running: one job checks every minute for ~5.5 hours, then starts its own
+# successor. The schedule below is only a watchdog that restarts the loop if the chain ever breaks
+# (while a loop is running, extra runs just wait in the concurrency queue and get replaced).
 on:
   schedule:
-    - cron: "4-59/5 * * * *"   # every 5 min, off the busy :00/:15 marks (GitHub can still run late)
-  workflow_dispatch:          # "Run workflow" button to post due items right now
+    - cron: "7-59/15 * * * *"
+  workflow_dispatch:          # "Run workflow" button to (re)start the publisher now
 
 concurrency:
   group: publish
@@ -11,16 +15,16 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write              # lets the loop start its successor run
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
 
-      - name: Publish
-        id: publish
+      - name: Publish loop
         env:
           # One line per Instagram account (secret IG_TOKEN_<ACCOUNT>)
           IG_TOKEN_FORMULASIMPLE: ${{ secrets.IG_TOKEN_FORMULASIMPLE }}
@@ -28,16 +32,28 @@ jobs:
           IG_TOKEN_PARENTSGODLYWAREHOUSE: ${{ secrets.IG_TOKEN_PARENTSGODLYWAREHOUSE }}
           IG_TOKEN_PARENTSDISPATCHEDINFO: ${{ secrets.IG_TOKEN_PARENTSDISPATCHEDINFO }}
           POST_PRIVATE_KEY: ${{ secrets.POST_PRIVATE_KEY }}
-          MEDIA_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
-        run: python3 scripts/publish.py
-
-      - name: Save post statuses
-        if: always()
+          LOOP_MINUTES: 320
         run: |
           git config user.name "autopost-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add posts
-          git diff --cached --quiet && exit 0
-          git commit -m "Update post statuses"
-          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
-          exit 1
+          save() {
+            git add posts
+            git diff --cached --quiet && return 0
+            git commit -q -m "Update post statuses"
+            for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && return 0; sleep 5; done
+            echo "::warning::could not push post statuses"
+          }
+          end=$((SECONDS + LOOP_MINUTES * 60))
+          while [ $SECONDS -lt $end ]; do
+            git pull --rebase -q || { git rebase --abort 2>/dev/null; git reset -q --hard origin/main; }
+            export MEDIA_BASE_URL="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$(git rev-parse HEAD)"
+            python3 scripts/publish.py || echo "::warning::publish.py reported failures (see above)"
+            save
+            sleep 60
+          done
+
+      - name: Start the next publisher run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish.yml --repo "$GITHUB_REPOSITORY" --ref main

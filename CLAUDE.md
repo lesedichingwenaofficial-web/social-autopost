@@ -1,7 +1,7 @@
 # Social autopost
 
 Free Instagram scheduler: posts live in `posts/`, a GitHub Actions workflow
-(`.github/workflows/publish.yml`, every 5 min) publishes anything due through
+(`.github/workflows/publish.yml`, checks every minute) publishes anything due through
 the official Instagram API. The laptop does not need to be on.
 
 ## Making a post (what the user asks Claude for)
@@ -31,8 +31,9 @@ lock but cannot unlock, so:
 - Reschedule: edit `publish_at` in post.json, push to main.
 - Cancel: delete the post folder (or set `"status": "cancelled"`), push to main.
 - Change caption/images: delete the post and create it again (keep drafts until it has posted).
-Runs check every 5 min and wait for anything due in the next 6 min, so posts go out on the minute
-when GitHub runs on time.
+The publisher job stays running (checks every minute, restarts itself every ~5.5h; a 15-min cron is
+only a watchdog), so posts go out on the minute. Don't depend on GitHub's cron for timing. A failing
+post is retried every 10 min, 3 attempts max.
 Check results: `status` / `result` / `last_error` in each `post.json` (the workflow commits them back) — `git pull` first.
 
 ## Accounts (`--account` value -> Instagram)

@@ -41,7 +41,8 @@ GRAPH = "https://graph.instagram.com/v23.0"
 ROOT = Path(__file__).resolve().parent.parent
 POSTS = ROOT / "posts"
 MAX_ATTEMPTS = 3
-LOOKAHEAD = timedelta(minutes=6)   # a bit more than the 5-minute schedule
+LOOKAHEAD = timedelta(minutes=6)   # posts due this soon are waited for, so they go out on the minute
+RETRY_AFTER = timedelta(minutes=10)  # spacing between attempts at a failing post
 VIDEO_EXT = {".mp4", ".mov"}
 
 DRY_RUN = os.environ.get("DRY_RUN") == "1"
@@ -208,6 +209,9 @@ def main():
             print(f"{post_file.parent.name}: publish_at has no timezone, skipping")
             failures += 1
             continue
+        last = post.get("last_attempt_at")
+        if last and datetime.fromisoformat(last) > now - RETRY_AFTER:
+            continue
         if when <= now + LOOKAHEAD:
             due.append((when, post_file, post))
 
@@ -229,6 +233,7 @@ def main():
             post = json.loads(post_file.read_text())  # on-disk state (may be revealed already)
             post["attempts"] = post.get("attempts", 0) + 1
             post["last_error"] = str(e)
+            post["last_attempt_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
             if post["attempts"] >= MAX_ATTEMPTS:
                 post["status"] = "failed"
             print(f"  FAILED (attempt {post['attempts']}): {e}")
@@ -240,6 +245,7 @@ def main():
             post["posted_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
             post["result"] = result
             post.pop("last_error", None)
+            post.pop("last_attempt_at", None)
             print(f"  posted: {result}")
         if not DRY_RUN:
             post_file.write_text(json.dumps(post, indent=2, ensure_ascii=False) + "\n")
