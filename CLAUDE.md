@@ -34,6 +34,10 @@ lock but cannot unlock, so:
 The publisher job stays running (checks every minute, restarts itself every ~5.5h; a 15-min cron is
 only a watchdog), so posts go out on the minute. Don't depend on GitHub's cron for timing. A failing
 post is retried every 10 min, 3 attempts max.
+Comment auto-replies: `autoreply.json` sets per-account keywords (e.g. "PATH"); the publisher loop
+checks every 5 min and gives each matching comment one public reply + one DM (scripts/autoreply.py,
+answered ids in autoreply-state.json). Token needs instagram_business_manage_comments and
+instagram_business_manage_messages. Test: `DRY_RUN=1 python3 scripts/autoreply.py`.
 Check results: `status` / `result` / `last_error` in each `post.json` (the workflow commits them back) — `git pull` first.
 
 ## Accounts (`--account` value -> Instagram)

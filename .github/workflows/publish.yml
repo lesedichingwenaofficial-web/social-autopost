@@ -41,17 +41,22 @@ jobs:
           git config user.name "autopost-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           save() {
-            git add posts
+            git add posts autoreply-state.json 2>/dev/null || git add posts
             git diff --cached --quiet && return 0
             git commit -q -m "Update post statuses"
             for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && return 0; sleep 5; done
             echo "::warning::could not push post statuses"
           }
           end=$((SECONDS + LOOP_MINUTES * 60))
+          last_reply=-600
           while [ $SECONDS -lt $end ]; do
             git pull --rebase -q || { git rebase --abort 2>/dev/null; git reset -q --hard origin/main; }
             export MEDIA_BASE_URL="https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$(git rev-parse HEAD)"
             python3 scripts/publish.py || echo "::warning::publish.py reported failures (see above)"
+            if [ $((SECONDS - last_reply)) -ge 300 ]; then   # keyword comment replies, every 5 min
+              python3 scripts/autoreply.py || echo "::warning::autoreply.py failed"
+              last_reply=$SECONDS
+            fi
             save
             sleep 60
           done
