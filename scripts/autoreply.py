@@ -7,8 +7,9 @@ Runs from the publish loop every few minutes. Rules live in autoreply.json:
         "enabled": true,
         "keywords": ["path"],                # whole word, any case: "PATH", "Path please 🙏"
         "replies": ["Sent you a DM 💛", ...], # one is picked at random per comment
-        "dm": "Hi! Here are the details ..."  # sent as an Instagram private reply
-      }
+        "dm": "Hi! Here are the details ...", # sent as an Instagram private reply
+        "only_users": ["mytestaccount"]       # optional: answer only these commenters (testing /
+      }                                       # while the app is in Development mode)
     }
 Comments already answered are recorded (by id only) in autoreply-state.json so nobody
 gets the reply twice. Instagram allows one private reply per comment, within 7 days.
@@ -64,6 +65,9 @@ def handle_account(account, rule, token, state, now):
             continue
         for c in pages(f"{m['id']}/comments", fields="id,text,username,timestamp", limit=50, access_token=token):
             if c.get("username", "").lower() == username.lower() or not matches(c.get("text"), rule["keywords"]):
+                continue
+            only = [u.lower().lstrip("@") for u in rule.get("only_users") or []]
+            if only and c.get("username", "").lower() not in only:
                 continue
             rec = done.setdefault(c["id"], {})
             if rec.get("reply") and rec.get("dm") or rec.get("tries", 0) >= MAX_TRIES:
