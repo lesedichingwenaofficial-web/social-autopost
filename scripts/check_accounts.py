@@ -33,7 +33,7 @@ for account in rules:
         continue
     def get(path, **q):
         q["access_token"] = tok
-        with urllib.request.urlopen(base + path + "?" + urllib.parse.urlencode(q), timeout=30) as r:
+        with urllib.request.urlopen(base + path + "?" + urllib.parse.urlencode(q), timeout=90) as r:
             return json.load(r)
     checks = [("comments (instagram_business_manage_comments)",
                lambda: get(get("me/media", fields="id", limit=1)["data"][0]["id"] + "/comments", limit=1)),
