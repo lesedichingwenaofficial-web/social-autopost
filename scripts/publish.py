@@ -56,7 +56,8 @@ def api(method, path, **params):
     url = path if path.startswith("http") else f"{GRAPH}/{path}"
     data = urllib.parse.urlencode(params).encode()
     if method == "GET":
-        req = urllib.request.Request(f"{url}?{data.decode()}")
+        # paging "next" URLs already carry their own query string
+        req = urllib.request.Request(f"{url}?{data.decode()}" if params else url)
     else:
         req = urllib.request.Request(url, data=data, method=method)
     try:
@@ -68,7 +69,8 @@ def api(method, path, **params):
             msg = json.loads(body)["error"]["message"]
         except Exception:
             msg = body[:500]
-        raise ApiError(f"{method} {path}: HTTP {e.code}: {msg}") from None
+        where = path.split("?")[0]  # never echo query strings (they can hold the access token)
+        raise ApiError(f"{method} {where}: HTTP {e.code}: {msg}") from None
 
 
 def token_for(account, secrets):
