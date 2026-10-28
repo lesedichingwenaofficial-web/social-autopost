@@ -10,6 +10,7 @@ A post lives in posts/<id>/post.json:
       "caption": "...",
       "media": ["01.jpg", "02.jpg"],           # 1 file = single post, 2-10 = carousel, .mp4 = reel/video
       "location_id": "108424279189115",        # optional: Facebook place Page ID (New York, NY)
+      "story": true,                           # optional: post each file as its own Story, in order
       "status": "scheduled"                    # scheduled -> posted | failed
     }
 Locked posts (the default, see postcrypt.py) hold only account/publish_at/status in
@@ -96,13 +97,16 @@ def wait_until_ready(container_id, token, timeout=600):
         time.sleep(10)
 
 
-def create_item(ig_id, token, url, carousel_item=False, caption=None, location_id=None, **reel):
+def create_item(ig_id, token, url, carousel_item=False, caption=None, location_id=None,
+                story=False, **reel):
     params = {"access_token": token, **reel}
     if Path(url).suffix.lower() in VIDEO_EXT:
         params["video_url"] = url
-        params["media_type"] = "VIDEO" if carousel_item else "REELS"
+        params["media_type"] = "STORIES" if story else "VIDEO" if carousel_item else "REELS"
     else:
         params["image_url"] = url
+        if story:
+            params["media_type"] = "STORIES"
     if carousel_item:
         params["is_carousel_item"] = "true"
     if caption:
@@ -137,6 +141,8 @@ def publish(post, post_dir, secrets, base_url):
 
     ig_id = api("GET", "me", fields="user_id,username", access_token=token)["user_id"]
 
+    if post.get("story"):
+        return publish_stories(post, post_dir, ig_id, token, urls)
     if len(urls) == 1:
         container = create_item(ig_id, token, urls[0], caption=caption, **location, **reel)
     else:
@@ -156,6 +162,23 @@ def publish(post, post_dir, secrets, base_url):
     except ApiError:
         link = None
     return link or media_id
+
+
+def publish_stories(post, post_dir, ig_id, token, urls):
+    """Each file becomes its own Story, in order. Progress is saved after every Story so a
+    retry continues where it stopped instead of posting the earlier ones again."""
+    post_file = post_dir / "post.json"
+    done = post.setdefault("story_ids", [])
+    for u in urls[len(done):]:
+        container = create_item(ig_id, token, u, story=True)
+        wait_until_ready(container, token)
+        done.append(api("POST", f"{ig_id}/media_publish", creation_id=container,
+                        access_token=token)["id"])
+        on_disk = json.loads(post_file.read_text())
+        on_disk["story_ids"] = done
+        post_file.write_text(json.dumps(on_disk, indent=2, ensure_ascii=False) + "\n")
+        time.sleep(5)  # keeps the Stories in order
+    return f"{len(done)} stories: " + ",".join(done)
 
 
 def git(*args):

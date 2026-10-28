@@ -37,10 +37,10 @@ def slugify(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40] or "post"
 
 
-def to_jpeg(src, dest):
+def to_jpeg(src, dest, story=False):
     img = Image.open(src)
     ratio = img.width / img.height
-    if not 0.8 <= ratio <= 1.91:
+    if not story and not 0.8 <= ratio <= 1.91:
         print(f"warning: {src.name} is {img.width}x{img.height}; Instagram wants "
               "aspect ratio between 4:5 and 1.91:1 and may reject it")
     if img.width > 1440:
@@ -66,6 +66,8 @@ def main():
     p.add_argument("--music-volume", type=float, default=1.0, help="0-1, default 1")
     p.add_argument("--keep-original-audio", action="store_true", help="mix music with the video's own sound")
     p.add_argument("--reel", action="store_true", help="turn the image slides into one slideshow Reel")
+    p.add_argument("--story", action="store_true",
+                   help="post each file as its own Story (9:16, 1080x1920); caption is not shown")
     p.add_argument("--seconds-per-slide", type=float, default=3.0)
     p.add_argument("--pad-color", default="black", help="background around 4:5 slides in a 9:16 Reel")
     p.add_argument("media", nargs="+")
@@ -86,6 +88,8 @@ def main():
 
     sources = list(map(Path, a.media))
     videos = [s for s in sources if s.suffix.lower() in VIDEO_EXT]
+    if a.story and (a.reel or a.music or a.cover or a.location_id):
+        sys.exit("--story can't be combined with --reel, --music, --cover or --location-id")
     if a.reel and videos:
         sys.exit("--reel builds a Reel from images only")
     if a.music and not videos and not a.reel:
@@ -120,7 +124,7 @@ def build(a, folder, sources, videos, when, caption):
                     shutil.copy(src, folder / name)
             else:
                 name = f"{i:02d}.jpg"
-                to_jpeg(src, folder / name)
+                to_jpeg(src, folder / name, a.story)
             names.append(name)
 
     reel_opts = {}
@@ -145,6 +149,7 @@ def build(a, folder, sources, videos, when, caption):
         "media": names,
         **({"location_id": a.location_id} if a.location_id else {}),
         **reel_opts,
+        **({"story": True} if a.story else {}),
         "status": "scheduled",
     }
     if not a.no_lock:
