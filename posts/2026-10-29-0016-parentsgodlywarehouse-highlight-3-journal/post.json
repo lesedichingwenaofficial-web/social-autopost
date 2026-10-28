@@ -10,5 +10,8 @@
     "03.jpg",
     "04.jpg",
     "05.jpg"
-  ]
+  ],
+  "attempts": 1,
+  "last_error": "Command '['git', 'pull', '--rebase', '-q']' returned non-zero exit status 128.",
+  "last_attempt_at": "2026-10-28T22:16:10+00:00"
 }
