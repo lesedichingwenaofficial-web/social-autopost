@@ -10,5 +10,13 @@
     "03.jpg",
     "04.jpg",
     "05.jpg"
-  ]
+  ],
+  "story_ids": [
+    "18121237333981995",
+    "18120415465963620",
+    "17994372458848805"
+  ],
+  "attempts": 1,
+  "last_error": "POST 17841440156163557/media_publish: HTTP 400: The requested resource does not exist",
+  "last_attempt_at": "2026-10-28T22:09:01+00:00"
 }
