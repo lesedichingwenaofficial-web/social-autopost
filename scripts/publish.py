@@ -172,8 +172,15 @@ def publish_stories(post, post_dir, ig_id, token, urls):
     for u in urls[len(done):]:
         container = create_item(ig_id, token, u, story=True)
         wait_until_ready(container, token)
-        done.append(api("POST", f"{ig_id}/media_publish", creation_id=container,
-                        access_token=token)["id"])
+        for attempt in range(6):  # a fresh container sometimes "does not exist" for a few seconds
+            try:
+                done.append(api("POST", f"{ig_id}/media_publish", creation_id=container,
+                                access_token=token)["id"])
+                break
+            except ApiError as e:
+                if "does not exist" not in str(e) or attempt == 5:
+                    raise
+                time.sleep(10)
         on_disk = json.loads(post_file.read_text())
         on_disk["story_ids"] = done
         post_file.write_text(json.dumps(on_disk, indent=2, ensure_ascii=False) + "\n")
