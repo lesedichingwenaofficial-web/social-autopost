@@ -2,7 +2,7 @@
   "account": "parentsgodlywarehouse",
   "publish_at": "2026-10-29T00:16+02:00",
   "story": true,
-  "status": "scheduled",
+  "status": "posted",
   "caption": "",
   "media": [
     "01.jpg",
@@ -12,6 +12,13 @@
     "05.jpg"
   ],
   "attempts": 1,
-  "last_error": "Command '['git', 'pull', '--rebase', '-q']' returned non-zero exit status 128.",
-  "last_attempt_at": "2026-10-28T22:16:10+00:00"
+  "story_ids": [
+    "18120920794995996",
+    "18013296227968499",
+    "18131716912819490",
+    "18179257687399576",
+    "17973661821176733"
+  ],
+  "posted_at": "2026-10-28T22:28:22+00:00",
+  "result": "5 stories: 18120920794995996,18013296227968499,18131716912819490,18179257687399576,17973661821176733"
 }
