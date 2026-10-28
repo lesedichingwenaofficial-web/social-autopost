@@ -72,3 +72,8 @@ Each account has its own style; never reuse Formula Simple's look for the others
   [--seconds-per-slide 3] [--pad-color "#f0ebe2"]` - this posts a 9:16 slideshow Reel, not a
   swipeable carousel. Needs ffmpeg (or `pip install imageio-ffmpeg`).
 - Test without posting: `DRY_RUN=1 python3 scripts/publish.py`
+- Stories: `new_post.py --story --caption "" ...` posts each file as its own Story, in order (9:16,
+  render slides with `SIZE=1080,1920 scripts/render.sh ...`). Progress is saved per Story, so a retry
+  continues instead of duplicating. The API can't add link stickers or create Highlights - the user
+  adds Stories to Highlights in the phone app (Instagram web has no highlight option) within 24h.
+  Example: drafts/bravepath-highlights/build.py (parentsgodlywarehouse BravePath highlights).
