@@ -21,6 +21,7 @@ jobs:
           IG_TOKEN_CHEEKYFOUNDLAMB: ${{ secrets.IG_TOKEN_CHEEKYFOUNDLAMB }}
           IG_TOKEN_PARENTSGODLYWAREHOUSE: ${{ secrets.IG_TOKEN_PARENTSGODLYWAREHOUSE }}
           IG_TOKEN_PARENTSDISPATCHEDINFO: ${{ secrets.IG_TOKEN_PARENTSDISPATCHEDINFO }}
+          IG_TOKEN_INFODISPATCHREAL: ${{ secrets.IG_TOKEN_INFODISPATCHREAL }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: python3 scripts/refresh_tokens.py
 
