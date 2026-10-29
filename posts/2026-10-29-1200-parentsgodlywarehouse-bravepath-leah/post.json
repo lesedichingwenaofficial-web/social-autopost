@@ -7,5 +7,8 @@
     "01.mp4"
   ],
   "location_id": "108424279189115",
-  "thumb_offset_ms": 500
+  "thumb_offset_ms": 500,
+  "attempts": 1,
+  "last_error": "Command '['git', 'pull', '--rebase', '-q']' returned non-zero exit status 128.",
+  "last_attempt_at": "2026-10-29T10:01:18+00:00"
 }
