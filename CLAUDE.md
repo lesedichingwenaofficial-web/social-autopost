@@ -46,6 +46,7 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
   US: always add `--location-id 108424279189115` (New York, NY) to every post.
 - `parentsgodlywarehouse` -> @parentsgodlywarehouse (style: not yet defined - ask the user)
 - `parentsdispatchedinfo` -> @parentsdispatchedinfo (style: not yet defined - ask the user)
+- `infodispatchreal` -> @infodispatchreal (style: not yet defined - ask the user)
 - `infodispatchreal` -> @infodispatchreal (football page; Reels watermarked @infodispatch). NOT parentsdispatchedinfo.
 Each account has its own style; never reuse Formula Simple's look for the others.
 
