@@ -44,7 +44,16 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
 - `formulasimple` -> @formulasimple.co (style: templates/slide.html)
 - `cheekyfoundlamb` -> @cheekyfoundlamb (style: not yet defined - ask the user). Target audience is the
   US: always add `--location-id 108424279189115` (New York, NY) to every post.
-- `parentsgodlywarehouse` -> @parentsgodlywarehouse (style: not yet defined - ask the user)
+- `parentsgodlywarehouse` -> @parentsgodlywarehouse (BravePath Kids Reels the user sends as finished videos).
+  Always `--location-id 108424279189115 --thumb-offset 0.5`. Captions: open with `💬 Comment "PATH" and
+  we'll send you the BravePath Kids 21-day journey 👇`, retell the video's story/list (only what's readable;
+  don't invent missing list items or numbers), quote the video's verse (KJV/ESV as shown), red hearts ❤️
+  (never yellow), standard BravePath footer + "👉 Comment PATH" + a "❤️ Save this…" line, 17 hashtags
+  ending #bravepathkids #parentsgodlywarehouse.
+  **Daily schedule: minimum 5 posts/day at 17:00, 18:00, 20:00, 22:00 and 00:00 (the 00:00 slot is the
+  next calendar day but counts as that day's 5th).** When the user sends a batch without times, fill the
+  next free slots: `python3 scripts/next_slots.py parentsgodlywarehouse <count>`. Extras at other times
+  only when the user names a time.
 - `parentsdispatchedinfo` -> @parentsdispatchedinfo (style: not yet defined - ask the user)
 - `infodispatchreal` -> @infodispatchreal (football page; Reels watermarked @infodispatch). NOT parentsdispatchedinfo.
 Each account has its own style; never reuse Formula Simple's look for the others.
