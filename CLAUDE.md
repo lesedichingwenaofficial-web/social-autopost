@@ -54,6 +54,13 @@ Check results: `status` / `result` / `last_error` in each `post.json` (the workf
   next calendar day but counts as that day's 5th).** When the user sends a batch without times, fill the
   next free slots: `python3 scripts/next_slots.py parentsgodlywarehouse <count>`. Extras at other times
   only when the user names a time.
+  **Drive handoff:** finished reels also arrive in Google Drive "PGW Reels/To Post" (folder
+  17JXcJ_P7lU6FgKvP6kKRzgYovbTlZdhN), made by the user's video chat; details in "PGW Reels/HANDOFF-README.txt"
+  (1xtyQWklaI6TdzAf-MNpg61gjvqtkRpkI). Each `<name>.mp4.manifest.json` = one reel: download the manifest and every
+  part in order (download_file_content), check each part's sha256, `cat` them into `<name>.mp4`, check the video
+  sha256, post with the caption from `<name>.txt` unchanged (it's already written), then move the .txt,
+  .manifest.json and .mp4.parts folder to "PGW Reels/Posted" (1OqLS9NSiJgjbSO-JU_C_j6lpcGXGcU6L) with update_file
+  (parentId). Only move them after the post shows `status: posted`.
 - `parentsdispatchedinfo` -> @parentsdispatchedinfo (style: not yet defined - ask the user)
 - `infodispatchreal` -> @infodispatchreal (football page; Reels watermarked @infodispatch). NOT parentsdispatchedinfo.
 Each account has its own style; never reuse Formula Simple's look for the others.
